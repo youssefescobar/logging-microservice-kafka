@@ -8,16 +8,13 @@ class Database {
 
   async connect() {
     if (this.isConnected) {
-      console.log('MongoDB already connected');
       return;
     }
 
     try {
       await mongoose.connect(config.mongodb.uri, config.mongodb.options);
       this.isConnected = true;
-      console.log('MongoDB connected');
     } catch (error) {
-      console.error('Failed to connect to MongoDB:', error.message);
       throw error;
     }
   }
@@ -27,9 +24,8 @@ class Database {
 
     try {
       await mongoose.disconnect();
-      console.log('MongoDB disconnected');
     } catch (error) {
-      console.error('Error disconnecting from MongoDB:', error.message);
+      console.error("Error disconnecting from MongoDB:", error);
     } finally {
       this.isConnected = false;
     }

@@ -1,6 +1,6 @@
 const { faker } = require('@faker-js/faker');
 
-class TrafficGenerator {
+class LogGenerator {
   constructor(kafkaProducer) {
     this.kafkaProducer = kafkaProducer;
     this.intervalId = null;
@@ -26,31 +26,26 @@ class TrafficGenerator {
 
   start(interval = 1000) {
     if (this.intervalId) {
-      console.log('Traffic generation is already running.');
       return;
     }
 
-    console.log(`Starting traffic generation with an interval of ${interval}ms.`);
     this.intervalId = setInterval(async () => {
       try {
         const fakeLog = this._createFakeLog();
         await this.kafkaProducer.sendLog(fakeLog);
       } catch (error) {
-        console.error('Error sending fake log:', error);
       }
     }, interval);
   }
 
   stop() {
     if (!this.intervalId) {
-      console.log('Traffic generation is not running.');
       return;
     }
 
-    console.log('Stopping traffic generation.');
     clearInterval(this.intervalId);
     this.intervalId = null;
   }
 }
 
-module.exports = TrafficGenerator;
+module.exports = LogGenerator;

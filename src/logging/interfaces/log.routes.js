@@ -1,21 +1,21 @@
 const express = require('express');
-const config = require('../configs/config');
-const Database = require('../configs/db_connection');
-const KafkaConsumer = require('../kafka/consumer');
-const KafkaProducer = require('../kafka/producer');
-const Log = require('../models/LogSchema');
-const TrafficGenerator = require('../utils/traffic_generator');
+const config = require('../../config/config');
+const Database = require('../../config/db_connection');
+const KafkaConsumer = require('../infrastructure/consumer');
+const KafkaProducer = require('../infrastructure/producer');
+const Log = require('../domain/log.model');
+const LogGenerator = require('../application/log.generator');
 const path = require('path');
 
 const app = express();
 const database = new Database();
 const kafkaConsumer = new KafkaConsumer();
 const kafkaProducer = new KafkaProducer();
-const trafficGenerator = new TrafficGenerator(kafkaProducer);
+const logGenerator = new LogGenerator(kafkaProducer);
 
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+app.use(express.static(path.join(__dirname, '..', '..', '..', 'frontend')));
 
 app.get('/logs', async (req, res) => {
   try {
@@ -53,7 +53,6 @@ app.get('/logs', async (req, res) => {
       logs,
     });
   } catch (error) {
-    console.error('Error fetching logs:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -62,12 +61,12 @@ app.get('/logs', async (req, res) => {
 
 app.get('/start-traffic', (req, res) => {
   const interval = req.query.interval ? parseInt(req.query.interval) : 1000;
-  trafficGenerator.start(interval);
+  logGenerator.start(interval);
   res.status(200).json({ message: `Traffic generation started with interval ${interval}ms.` });
 });
 
 app.get('/stop-traffic', (req, res) => {
-  trafficGenerator.stop();
+  logGenerator.stop();
   res.status(200).json({ message: 'Traffic generation stopped.' });
 });
 
@@ -83,19 +82,16 @@ const start = async () => {
     const onBatchCallback = async (documents) => {
       try {
         await Log.insertMany(documents);
-        console.log(`Successfully saved ${documents.length} logs to MongoDB.`);
       } catch (error) {
-        console.error('Error saving logs to MongoDB:', error);
+        console.error("Error inserting documents in batch callback:", error);
       }
     };
 
     kafkaConsumer.consumeInBatches(onBatchCallback);
 
-    app.listen(config.api.port, () => {
-      console.log(`API Gateway running on port ${config.api.port}`);
-    });
+    app.listen(config.api.port);
   } catch (error) {
-    console.error('Failed to start the API Gateway:', error);
+    console.error("Error starting application:", error);
     process.exit(1);
   }
 };
@@ -103,20 +99,25 @@ const start = async () => {
 start();
 
 process.on('SIGTERM', async () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
-  trafficGenerator.stop();
-  await kafkaConsumer.disconnect();
-  await kafkaProducer.disconnect();
-  await database.disconnect();
+  logGenerator.stop();
+  try {
+    await kafkaConsumer.disconnect();
+    await kafkaProducer.disconnect();
+    await database.disconnect();
+  } catch (error) {
+    console.error("Error during SIGTERM shutdown:", error);
+  }
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  console.log('SIGINT received. Shutting down gracefully...');
-  trafficGenerator.stop();
-  await kafkaConsumer.disconnect();
-  await kafkaProducer.disconnect();
-  await database.disconnect();
+  logGenerator.stop();
+  try {
+    await kafkaConsumer.disconnect();
+    await kafkaProducer.disconnect();
+    await database.disconnect();
+  } catch (error) {
+    console.error("Error during SIGINT shutdown:", error);
+  }
   process.exit(0);
 });
-

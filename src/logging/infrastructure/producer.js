@@ -1,5 +1,5 @@
 const { Kafka } = require('kafkajs');
-const config = require('../configs/config')
+const config = require('../../config/config')
 
 class KafkaProducer {
      constructor() {
@@ -14,16 +14,13 @@ class KafkaProducer {
 
   async connect() {
     if (this.isConnected) {
-      console.log('Producer already connected');
       return;
     }
 
     try {
       await this.producer.connect();
       this.isConnected = true;
-      console.log('kafka Producer connected');
     } catch (error) {
-      console.error('failed to connect producer:', error.message);
       throw error;
     }
   }
@@ -34,9 +31,8 @@ class KafkaProducer {
     try {
       await this.producer.disconnect();
       this.isConnected = false;
-      console.log('Producer disconnected');
     } catch (error) {
-      console.error('Error disconnecting:', error.message);
+      console.error("Error disconnecting Kafka producer:", error);
     }
   }
 
@@ -55,10 +51,8 @@ class KafkaProducer {
                 }
             ]
         });
-            console.log(`Sent: ${logdata.action} | User: ${logdata.userId.slice(0, 8)}`);
         return result;
     } catch (error) {
-      console.error('Error: ', error.message);
       throw error;
     }
     }
