@@ -54,16 +54,7 @@ userActivitySchema.index({ userId: 1, timestamp: -1 });
 userActivitySchema.index({ action: 1, timestamp: -1 }); 
 userActivitySchema.index({ timestamp: -1, processedAt: -1 });
 
-userActivitySchema.statics.createActivity = async function(activityData) {
-  try {
-    const activity = new this(activityData);
-    await activity.save();
-    return activity;
-  } catch (error) {
-    console.error('Error creating activity:', error);
-    throw error;
-  }
-};
+
 
 const userActivity = mongoose.model('userActivity', userActivitySchema)
 

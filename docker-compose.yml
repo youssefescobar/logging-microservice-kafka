@@ -15,10 +15,8 @@ services:
        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 # just 1 copy 
 
        KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092, CONTROLLER://0.0.0.0:9093
-       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
        KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-       KAFKAJS_NO_PARTITIONER_WARNING: 1
-
 
     volumes:
       - kafka-kraft:/var/lib/kafka/data
@@ -32,12 +30,21 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
+    
     volumes:
       - mongo-data:/data/db
+
+  node:
+    build: .
+    container_name: logging-ms
+    ports:
+      - "5000:5000"
+
+    depends_on:
+    - mongodb
+    - kafka
 
 
 volumes:
   kafka-kraft:   
   mongo-data:
-
-  
