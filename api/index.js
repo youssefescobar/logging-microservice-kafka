@@ -5,6 +5,7 @@ const KafkaConsumer = require('../kafka/consumer');
 const KafkaProducer = require('../kafka/producer');
 const Log = require('../models/LogSchema');
 const TrafficGenerator = require('../utils/traffic_generator');
+const path = require('path');
 
 const app = express();
 const database = new Database();
@@ -12,8 +13,9 @@ const kafkaConsumer = new KafkaConsumer();
 const kafkaProducer = new KafkaProducer();
 const trafficGenerator = new TrafficGenerator(kafkaProducer);
 
-
 app.use(express.json());
+
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 app.get('/logs', async (req, res) => {
   try {
