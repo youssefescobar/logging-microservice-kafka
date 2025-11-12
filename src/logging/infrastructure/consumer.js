@@ -24,8 +24,10 @@ class KafkaConsumer{
         try{
             await this.consumer.connect();
             this.isConnected = true
+            console.log('Kafka consumer connected');
         }
         catch(error){
+            console.error('Kafka consumer connection error:', error);
             throw error
         }
     }
@@ -45,6 +47,7 @@ class KafkaConsumer{
         }
         try{
             await this.consumer.subscribe({topic: topic, fromBeginning: true})
+            console.log(`Subscribed to topic: ${topic}`);
 
         }
         catch(error){
@@ -62,7 +65,7 @@ class KafkaConsumer{
             eachBatchAutoResolve: false, 
             
             eachBatch: async ({ batch, resolveOffset, heartbeat }) => {
-                
+                console.log(`Processing batch of ${batch.messages.length} messages`);
                 const documents = [];
                 for (const message of batch.messages) {
                     try {

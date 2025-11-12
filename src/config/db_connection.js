@@ -14,7 +14,9 @@ class Database {
     try {
       await mongoose.connect(config.mongodb.uri, config.mongodb.options);
       this.isConnected = true;
+      console.log('Database connected');
     } catch (error) {
+      console.error('Database connection error:', error);
       throw error;
     }
   }

@@ -82,6 +82,7 @@ const start = async () => {
     const onBatchCallback = async (documents) => {
       try {
         await Log.insertMany(documents);
+        console.log(`${documents.length} logs inserted into the database`);
       } catch (error) {
         console.error("Error inserting documents in batch callback:", error);
       }

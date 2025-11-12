@@ -2,7 +2,7 @@
   "name": "microservice-kafka",
   "version": "1.0.0",
   "description": "",
-  "main": "./api/index.js",
+  "main": "src/logging/interfaces/index.js",
   "scripts": {
     "start": "nodemon "
   },

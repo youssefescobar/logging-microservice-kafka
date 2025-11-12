@@ -20,7 +20,9 @@ class KafkaProducer {
     try {
       await this.producer.connect();
       this.isConnected = true;
+      console.log('Kafka producer connected');
     } catch (error) {
+      console.error('Kafka producer connection error:', error);
       throw error;
     }
   }
@@ -53,6 +55,7 @@ class KafkaProducer {
         });
         return result;
     } catch (error) {
+      console.error('Error sending log to Kafka:', error);
       throw error;
     }
     }
