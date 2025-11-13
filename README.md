@@ -1,10 +1,10 @@
 # Microservice Kafka Project
 
-This project demonstrates a microservice architecture that uses Kafka for asynchronous communication between services. It includes a log generation service, a Kafka pipeline, and a backend service to query logs, all containerized and ready for deployment.
+This project demonstrates a microservice architecture that uses Kafka for asynchronous communication between services, includes log generation, Api endpoint to query logs, all containerized and ready for deployment.
 
-## 🚀 Live Demo
+## Live Demo
 
-A live version of this project is running on an AWS EKS cluster. You can interact with it right now!
+A live version of this project is running on an AWS EKS cluster. You can interact with it right now
 
 **Frontend UI:** [http://a010bfab96a5b46e1b35526c5abaee8f-63120397.eu-north-1.elb.amazonaws.com:5000/](http://a010bfab96a5b46e1b35526c5abaee8f-63120397.eu-north-1.elb.amazonaws.com:5000/)
 
