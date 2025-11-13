@@ -1,86 +1,181 @@
 # Microservice Kafka Project
 
-This project demonstrates a microservice architecture utilizing Kafka for inter-service communication.
+This project demonstrates a microservice architecture that uses Kafka for asynchronous communication between services. It includes a log generation service, a Kafka pipeline, and a backend service to query logs, all containerized and ready for deployment.
 
-## Architecture Choices
+## 🚀 Live Demo
 
-This project leverages a microservice architecture. Key components include:
-*   **Kraft Kafka:** Kafka is deployed in Kraft mode, which integrates metadata management directly into Kafka brokers, removing the need for a separate Zookeeper ensemble. This simplifies deployment and management.
-*   **Microservices:** Individual services communicate asynchronously via Kafka topics.
+A live version of this project is running on an AWS EKS cluster. You can interact with it right now!
 
-## Setup Instructions
+**Frontend UI:** [http://a010bfab96a5b46e1b35526c5abaee8f-63120397.eu-north-1.elb.amazonaws.com:5000/](http://a010bfab96a5b46e1b35526c5abaee8f-63120397.eu-north-1.elb.amazonaws.com:5000/)
 
-To get the project up and running locally using Docker Compose:
+**API Endpoint:** `http://a010bfab96a5b46e1b35526c5abaee8f-63120397.eu-north-1.elb.amazonaws.com:5000`
 
-1.  **Build and Run Services:**
-    Navigate to the root directory of the project and execute the following command:
+You can use the UI to see logs in real-time or use the API to fetch data (see [API Reference](#api-reference) below).
+
+---
+
+## 🏗️ Architecture
+
+### System Architecture
+
+The project consists of several key components working together:
+
+*   **Frontend:** A simple web interface to display logs.
+*   **Logging Microservice (Node.js):**
+    *   Exposes a REST API to query logs from the database.
+    *   Includes a traffic generator to simulate log production.
+*   **Kafka:** Acts as a message broker, decoupling the log producers from the consumers. It's deployed in Kraft mode, eliminating the need for a separate Zookeeper cluster.
+*   **MongoDB:** A NoSQL database used to store and query the logs.
+
+### Code Architecture
+
+The Node.js microservice follows a layered architecture, promoting separation of concerns and maintainability:
+
+*   **`domain`**: Contains the core business logic and data models (e.g., `log.model.js`).
+*   **`application`**: Holds application-specific logic and use cases, like the log traffic generator (`log.generator.js`).
+*   **`infrastructure`**: Manages connections to external systems like Kafka (`consumer.js`, `producer.js`) and MongoDB (`db_connection.js`).
+*   **`interfaces`**: Defines the entry points to the application, such as the Express.js REST API controllers (`index.js`).
+
+---
+
+## 💻 Local Setup
+
+You can run the entire stack on your local machine using either Docker Compose or a local Kubernetes cluster.
+
+### 1. Using Docker Compose
+
+This is the simplest way to get started.
+
+1.  **Build and Run:**
     ```bash
     docker-compose up --build -d
     ```
-    This command will build the necessary Docker images and start all services in detached mode.
+2.  **Access the Service:**
+    *   **UI:** Open your browser to [http://localhost:5000](http://localhost:5000).
+    *   **API:** The API is available at `http://localhost:5000`. You can use a tool like Postman or `curl` to interact with it. See the [API Reference](#api-reference).
 
-2.  **Access Services:**
-    Once the services are running, you can access the frontend application via your web browser. Check your `docker-compose.yml` for specific port mappings.
+### 2. Using Kubernetes (Minikube / Docker Desktop)
 
-## Kubernetes Deployment
+This method simulates a cloud deployment more closely.
 
-This project includes Kubernetes manifests for deploying the application to a Kubernetes cluster.
+1.  **Start Your Cluster:**
+    Ensure you have a local Kubernetes cluster running (e.g., `minikube start` or enable Kubernetes in Docker Desktop).
 
-### Local Deployment (Minikube / Docker Desktop)
-
-For local development and testing, you can use `minikube` or the Kubernetes cluster provided by Docker Desktop. The `all-in-one.yaml` file is provided for this purpose. It will deploy all the necessary components (MongoDB, Kafka, and the logging microservice) in a `logging-stack` namespace.
-
-**Note:** This manifest uses `emptyDir` for volumes, which means data will be lost if pods restart. This is suitable for local testing but not for production.
-
-1.  **Start your local Kubernetes cluster:**
-    *   **Minikube:** `minikube start`
-    *   **Docker Desktop:** Enable Kubernetes in the Docker Desktop settings.
-
-2.  **Apply the manifest:**
+2.  **Deploy Persistent Storage:**
+    Apply the Persistent Volume Claims (PVCs) for Kafka and MongoDB.
     ```bash
-    kubectl apply -f k8s/all-in-one.yaml
+    kubectl apply -f k8s/pvc-mongo.yaml
+    kubectl apply -f k8s/pvc-kafka.yaml
     ```
 
-3.  **Access the service:**
-    The `logging-ms` service is exposed as a `LoadBalancer`. In a local environment, you can access it using the following command:
-    *   **Minikube:** `minikube service logging-ms -n logging-stack`
-    *   **Docker Desktop:** The service should be available at `localhost:5000`.
+3.  **Deploy Kafka & MongoDB:**
+    Deploy the database and message broker.
+    ```bash
+    kubectl apply -f k8s/mongo.yaml
+    kubectl apply -f k8s/kafka.yaml
+    ```
+    **Wait** for these pods to be in the `Running` state before proceeding. You can check their status with:
+    ```bash
+    kubectl get pods -n logging-stack
+    ```
 
-### AWS EKS Deployment
+4.  **Deploy the Application:**
+    Finally, deploy the Node.js logging microservice.
+    ```bash
+    kubectl apply -f k8s/node-app.yaml
+    ```
 
-For a production-like environment on AWS, you can use Amazon EKS (Elastic Kubernetes Service).
+5.  **Access the Service:**
+    *   **Minikube:** Forward the service to your local machine:
+        ```bash
+        minikube service logging-ms -n logging-stack
+        ```
+        This will open the service in your browser.
+    *   **Docker Desktop:** The service should be available at [http://localhost:5000](http://localhost:5000).
 
-1.  **Create the EKS cluster:**
-    The `k8s/eks-cluster.yaml` file defines an EKS cluster using `eksctl`. To create the cluster, you need to have `eksctl` and `aws-cli` installed and configured.
+---
 
+## ☁️ Cloud Deployment (AWS EKS)
+
+The `k8s/eks-cluster.yaml` file is configured to provision a cluster on AWS EKS using `eksctl`.
+
+1.  **Prerequisites:**
+    Ensure you have `eksctl` and the `aws-cli` installed and configured with appropriate credentials.
+
+2.  **Create the Cluster:**
     ```bash
     eksctl create cluster -f k8s/eks-cluster.yaml
     ```
-    This command will provision an EKS cluster with the specified configuration. This can take several minutes.
+    This command can take several minutes to complete.
 
-2.  **Deploy the application:**
-    Once the cluster is ready, you can deploy the application using the same `all-in-one.yaml` manifest.
-
+3.  **Deploy the Application:**
+    Once the cluster is ready, you can deploy the entire stack using the `all-in-one.yaml` manifest, which is designed for environments where PVCs are dynamically provisioned.
     ```bash
     kubectl apply -f k8s/all-in-one.yaml
     ```
 
-    **Note:** For a production deployment, you should use PersistentVolumeClaims (PVCs) instead of `emptyDir` for data persistence. The provided `pvc-kafka.yaml`, `pvc-mongo.yaml`, and `pvc-zk.yaml` can be used as a reference. You would also need to modify the deployments to use these PVCs.
-
-3.  **Access the service:**
-    The `logging-ms` service is exposed as a `LoadBalancer`. On AWS, this will provision an Elastic Load Balancer (ELB). You can get the external IP of the service by running:
+4.  **Access the Service:**
+    The manifest creates a `LoadBalancer` service. Find its external address:
     ```bash
     kubectl get svc logging-ms -n logging-stack
     ```
-    The external IP will be listed in the `EXTERNAL-IP` column. You can then access the service at `http://<EXTERNAL-IP>:5000`.
+    The URL will be in the `EXTERNAL-IP` column.
 
-    Example: `http://a010bfab96a5b46e1b35526c5abaee8f-63120397.eu-north-1.elb.amazonaws.com:5000/`
+---
 
-    The API endpoints are accessible regardless of whether the service is deployed locally or on the cloud. Simply replace the base URL (`localhost:5000` for local, or the ELB URL for AWS) with the appropriate address.
+## 📖 API Reference
 
-    *   Get logs: `http://<BASE_URL>/logs?page=1&limit=1&userId=&action=logout&startDate=&endDate=`
-        Example (AWS): `http://a010bfab96a5b46e1b35526c5abaee8f-63120397.eu-north-1.elb.amazonaws.com:5000/logs?page=1&limit=1&userId=&action=logout&startDate=&endDate=`
-    *   Start traffic generation: `http://<BASE_URL>/start-traffic?interval=500`
-        Example (Local): `http://localhost:5000/start-traffic?interval=500`
-    *   Stop traffic generation: `http://<BASE_URL>/stop-traffic`
-        Example (Local): `http://localhost:5000/stop-traffic`
+All endpoints are `GET` requests. The base URL depends on your deployment environment (`http://localhost:5000` for local, or the live demo URL for cloud).
+
+### Fetch Logs
+
+Retrieves a paginated and filtered list of logs.
+
+`GET /logs`
+
+**Query Parameters:**
+
+| Parameter   | Type     | Default | Description                                          |
+|-------------|----------|---------|------------------------------------------------------|
+| `page`      | `number` | `1`     | The page number to retrieve.                         |
+| `limit`     | `number` | `10`    | The number of logs to return per page.               |
+| `userId`    | `string` |         | Filter logs by a specific user ID.                   |
+| `action`    | `string` |         | Filter logs by a specific action (e.g., `login`).    |
+| `startDate` | `Date`   |         | The start date for the time range (ISO 8601 format). |
+| `endDate`   | `Date`   |         | The end date for the time range (ISO 8601 format).   |
+
+**Example Request:**
+
+```
+http://<BASE_URL>/logs?page=1&limit=5&action=logout
+```
+
+### Start Traffic Generation
+
+Starts a process that generates random logs and sends them to Kafka.
+
+`GET /start-traffic`
+
+**Query Parameters:**
+
+| Parameter  | Type     | Default | Description                                  |
+|------------|----------|---------|----------------------------------------------|
+| `interval` | `number` | `1000`  | The interval in milliseconds between each log. |
+
+**Example Request:**
+
+```
+http://<BASE_URL>/start-traffic?interval=500
+```
+
+### Stop Traffic Generation
+
+Stops the log generation process.
+
+`GET /stop-traffic`
+
+**Example Request:**
+
+```
+http://<BASE_URL>/stop-traffic
+```
