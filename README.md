@@ -29,12 +29,12 @@ The project consists of several key components working together:
 
 ### Code Architecture
 
-The Node.js microservice follows a layered architecture, promoting separation of concerns and maintainability:
+The Node.js microservice follows a Domain-Driven Design (DDD) inspired architecture, promoting clear separation of concerns and maintainability. This approach structures the codebase around the domain model, making it easier to manage complexity and align with business logic:
 
-*   **`domain`**: Contains the core business logic and data models (e.g., `log.model.js`).
-*   **`application`**: Holds application-specific logic and use cases, like the log traffic generator (`log.generator.js`).
-*   **`infrastructure`**: Manages connections to external systems like Kafka (`consumer.js`, `producer.js`) and MongoDB (`db_connection.js`).
-*   **`interfaces`**: Defines the entry points to the application, such as the Express.js REST API controllers (`index.js`).
+*   **`domain`**: This layer is the heart of the application, containing the core business logic, entities, and value objects (e.g., `log.model.js`). It is independent of external concerns.
+*   **`application`**: This layer orchestrates the domain objects to perform specific tasks or use cases, such as generating log traffic (`log.generator.js`). It acts as a thin layer coordinating interactions.
+*   **`infrastructure`**: This layer deals with external technical concerns, providing implementations for interfaces defined in the domain. This includes managing connections to external systems like Kafka (`consumer.js`, `producer.js`) and MongoDB (`db_connection.js`).
+*   **`interfaces`**: This layer defines the entry points for the application, handling user interactions and external requests. This includes the Express.js REST API controllers (`index.js`) and potentially UI components.
 
 ---
 
@@ -62,7 +62,7 @@ This method simulates a cloud deployment more closely.
     Ensure you have a local Kubernetes cluster running (e.g., `minikube start` or enable Kubernetes in Docker Desktop).
 
 2.  **Deploy Persistent Storage:**
-    Apply the Persistent Volume Claims (PVCs) for Kafka and MongoDB.
+    Apply the Persistent Volume Claims (PVCs) for MongoDB and Kafka.
     ```bash
     kubectl apply -f k8s/pvc-mongo.yaml
     kubectl apply -f k8s/pvc-kafka.yaml
@@ -179,3 +179,7 @@ Stops the log generation process.
 ```
 http://<BASE_URL>/stop-traffic
 ```
+
+---
+
+**A personal note:** At the beginning of this project, I wasn't familiar with Kafka or Kubernetes. This project has been a significant learning experience, and I appreciate the opportunity to work on it. Please contact me if I'm accepted or rejected so I can shut down the cluster. 😭
