@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: logging-ms
-          image: logging-ms:latest
-          imagePullPolicy: Never
+          image: 582520650777.dkr.ecr.eu-north-1.amazonaws.com/logging-ms:latest # if local change it to logging-ms:latest
+          # imagePullPolicy: Never                                               # uncomment this line for local.
           ports:
             - containerPort: 5000
           command: ["node"]
