@@ -32,13 +32,16 @@ The project consists of several key components working together:
 The Node.js microservice follows a Domain-Driven Design (DDD) inspired architecture, promoting clear separation of concerns and maintainability. This approach structures the codebase around the domain model, making it easier to manage complexity and align with business logic:
 
 *   **`domain`**: This layer is the heart of the application, containing the core business logic, entities, and value objects (e.g., `log.model.js`). It is independent of external concerns.
+
 *   **`application`**: This layer orchestrates the domain objects to perform specific tasks or use cases, such as generating log traffic (`log.generator.js`). It acts as a thin layer coordinating interactions.
-*   **`infrastructure`**: This layer deals with external technical concerns, providing implementations for interfaces defined in the domain. This includes managing connections to external systems like Kafka (`consumer.js`, `producer.js`) and MongoDB (`db_connection.js`).
+
+*   **`infrastructure`** and **`config`**: This layer deals with external technical concerns, providing implementations for interfaces defined in the domain. This includes managing connections to external systems like Kafka (`consumer.js`, `producer.js`) and MongoDB (`db_connection.js`).
+
 *   **`interfaces`**: This layer defines the entry points for the application, handling user interactions and external requests. This includes the Express.js REST API controllers (`index.js`) and potentially UI components.
 
 ---
 
-## 💻 Local Setup
+## Local Setup
 
 You can run the entire stack on your local machine using either Docker Compose or a local Kubernetes cluster.
 
@@ -68,7 +71,6 @@ This method simulates a cloud deployment more closely.
     eval $(minikube docker-env)
     docker build -t logging-ms:latest .
     ```
-    *(Note: For Docker Desktop, you can skip the `eval` command if its Kubernetes cluster uses the same Docker daemon as your terminal.)*
 
 3.  **Deploy Persistent Storage:**
     Apply the Persistent Volume Claims (PVCs) for MongoDB and Kafka.
