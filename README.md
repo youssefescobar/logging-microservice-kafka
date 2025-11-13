@@ -61,14 +61,23 @@ This method simulates a cloud deployment more closely.
 1.  **Start Your Cluster:**
     Ensure you have a local Kubernetes cluster running (e.g., `minikube start` or enable Kubernetes in Docker Desktop).
 
-2.  **Deploy Persistent Storage:**
+2.  **Build the Application Image:**
+    Before deploying to a local cluster, you must build the `logging-ms` image and make it available to Minikube's Docker daemon.
+    ```bash
+    minikube start
+    eval $(minikube docker-env)
+    docker build -t logging-ms:latest .
+    ```
+    *(Note: For Docker Desktop, you can skip the `eval` command if its Kubernetes cluster uses the same Docker daemon as your terminal.)*
+
+3.  **Deploy Persistent Storage:**
     Apply the Persistent Volume Claims (PVCs) for MongoDB and Kafka.
     ```bash
     kubectl apply -f k8s/pvc-mongo.yaml
     kubectl apply -f k8s/pvc-kafka.yaml
     ```
 
-3.  **Deploy Kafka & MongoDB:**
+4.  **Deploy Kafka & MongoDB:**
     Deploy the database and message broker.
     ```bash
     kubectl apply -f k8s/mongo.yaml
@@ -79,13 +88,17 @@ This method simulates a cloud deployment more closely.
     kubectl get pods -n logging-stack
     ```
 
-4.  **Deploy the Application:**
-    Finally, deploy the Node.js logging microservice.
+5.  **Configure and Deploy the Application:**
+    Before deploying the application, you need to modify the `k8s/node-app.yaml` file for local use.
+    *   Change the `image` from the AWS ECR address to `logging-ms:latest`.
+    *   Uncomment the `imagePullPolicy: Never` line. This tells Kubernetes to use the local image you just built instead of trying to pull it from a remote repository.
+
+    Once the file is modified, deploy the application:
     ```bash
     kubectl apply -f k8s/node-app.yaml
     ```
 
-5.  **Access the Service:**
+6.  **Access the Service:**
     *   **Minikube:** Forward the service to your local machine:
         ```bash
         minikube service logging-ms -n logging-stack
